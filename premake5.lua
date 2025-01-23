@@ -36,7 +36,4 @@ project "OpenGLBoilerPlate"
     filter "system:windows"
         defines { "_WINDOWS" }
 
-include "libs/glfw.lua"
-include "libs/glad.lua"
-include "libs/glm.lua"
-include "libs/imgui.lua"
+include "libs/libs.lua"
