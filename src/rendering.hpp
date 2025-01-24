@@ -3,7 +3,6 @@
 #include <string>
 
 namespace core {
-
 struct window_t {
   GLFWwindow *window = nullptr;
   const std::string_view title;

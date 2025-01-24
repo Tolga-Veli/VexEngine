@@ -1,4 +1,4 @@
-#include "../include/rendering.hpp"
+#include "rendering.hpp"
 #include <iostream>
 
 namespace core {
