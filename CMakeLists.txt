@@ -1,74 +1,69 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.20)
 
 project(
-  Vex-Engine
-  VERSION 3.2
-  DESCRIPTION "My Voxel Game Engine"
-  LANGUAGES CXX
-)
-# Set C++ standard
-set(CMAKE_CXX_STANDARD 17)
-set(LIB_DIR, "${PROJECT_SOURCE_DIR}/libs")
-set(SRC_DIR, "${PROJECT_SOURCE_DIR}/src")
-set(INCLUDE_DIR, "${PROJECT_SOURCE_DIR}/include")
-
-# Define your source files
-file(GLOB_RECURSE VEX_FILES
-    ${SRC_DIR}/*.cpp
-    ${INCLUDE_DIR}/*.hpp
+    JupiterEngine
+    VERSION 0.1
+    DESCRIPTION "My Simple Game Engine"
+    LANGUAGES CXX C 
 )
 
-# Create the executable
-add_executable(${PROJECT_NAME} ${VEX_FILES})
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Add ${LIB_DIR} libraries
-# Adjust these paths if you use submodules or custom paths for the libraries
+set(LIB_DIR "${PROJECT_SOURCE_DIR}/libs")
+set(SRC_DIR "${PROJECT_SOURCE_DIR}/src")
 
-# GLFW
-add_subdirectory(${LIB_DIR}/glfw)
-target_link_libraries(${PROJECT_NAME} glfw)
-
-# GLAD
-add_library(glad ${LIB_DIR}/glad/src/glad.c)
-target_include_directories(glad PUBLIC ${LIB_DIR}/glad/include)
-target_link_libraries(${PROJECT_NAME} glad)
-
-# GLM
-target_include_directories(${PROJECT_NAME} PRIVATE ${LIB_DIR}/glm)
-
-# ImGui
-add_library(imgui
-    ${LIB_DIR}/imgui/imgui.cpp
-    ${LIB_DIR}/imgui/imgui_draw.cpp
-    ${LIB_DIR}/imgui/imgui_widgets.cpp
-    ${LIB_DIR}/imgui/backends/imgui_impl_glfw.cpp
-    ${LIB_DIR}/imgui/backends/imgui_impl_opengl3.cpp
-)
-target_include_directories(imgui PUBLIC ${LIB_DIR}/imgui ${LIB_DIR}/imgui/backends)
-target_link_libraries(${PROJECT_NAME} imgui)
-
-# Include directories
-target_include_directories(${PROJECT_NAME} PRIVATE
-    ${LIB_DIR}/glfw/include
-    ${LIB_DIR}/glad/include
-    ${LIB_DIR}/imgui
+file(GLOB_RECURSE SRC_FILES
+    "${SRC_DIR}/*.cpp"
+    "${SRC_DIR}/*.hpp"
 )
 
-# Link OpenGL
+add_executable(${PROJECT_NAME} ${SRC_FILES})
+
+add_subdirectory("${LIB_DIR}/glfw")
+target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+
+add_library(glad "${LIB_DIR}/glad/src/gl.c")
+target_include_directories(glad PUBLIC "${LIB_DIR}/glad/include")
+target_link_libraries(${PROJECT_NAME} PRIVATE glad)
+
+target_include_directories(${PROJECT_NAME} PRIVATE "${LIB_DIR}/glm")
+
+add_library(imgui STATIC
+    "${LIB_DIR}/imgui/imgui.cpp"
+    "${LIB_DIR}/imgui/imgui_draw.cpp"
+    "${LIB_DIR}/imgui/imgui_tables.cpp" 
+    "${LIB_DIR}/imgui/imgui_widgets.cpp"
+    "${LIB_DIR}/imgui/backends/imgui_impl_glfw.cpp"
+    "${LIB_DIR}/imgui/backends/imgui_impl_opengl3.cpp"
+)
+target_include_directories(imgui PUBLIC "${LIB_DIR}/imgui" "${LIB_DIR}/imgui/backends" "${LIB_DIR}/glfw/include")
+target_link_libraries(${PROJECT_NAME} PRIVATE imgui)
+
+target_include_directories(${PROJECT_NAME} PRIVATE 
+    "${SRC_DIR}"
+    "${LIB_DIR}/glad/include"
+)
+
 find_package(OpenGL REQUIRED)
-target_link_libraries(${PROJECT_NAME} OpenGL::GL)
+target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL)
 
-# Set output directories for executables and libraries
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+target_compile_definitions(${PROJECT_NAME} PRIVATE J_DEBUG)
 
-# Alternatively, for libraries
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-
-# Optional: Enable warnings for better development
-if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    target_compile_options(${PROJECT_NAME} PRIVATE /W4 /permissive-)
+if (MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE /W4 /Zc:preprocessor) 
 else()
-    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic -Werror)
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic)
 endif()
 
+set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
+# This command copies the assets folder to where the .exe is generated
+# Create a Symlink instead of copying
+add_custom_command(TARGET JupiterEngine POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    "${CMAKE_SOURCE_DIR}/assets"
+    "$<TARGET_FILE_DIR:JupiterEngine>/assets"
+    COMMENT "Copying assets to build directory..."
+)
